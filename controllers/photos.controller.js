@@ -10,10 +10,32 @@ exports.add = async (req, res) => {
 
     if(title && author && email && file) { // if fields are not empty...
 
-      const fileName = file.path.split('/').slice(-1)[0]; // cut only filename from full path, e.g. C:/test/abc.jpg -> abc.jpg
-      const newPhoto = new Photo({ title, author, email, src: fileName, votes: 0 });
-      await newPhoto.save(); // ...save new photo in DB
-      res.json(newPhoto);
+      if(title.length <= 25 && author.length <= 50) {
+        const fileName = file.path.split('/').slice(-1)[0]; // cut only filename from full path, e.g. C:/test/abc.jpg -> abc.jpg
+        const fileExt = fileName.split('.').slice(-1)[0];
+
+        const titlePattern = new RegExp(/(([A-z|0-9]\s|\.|\,|\;|\:|\-|\!)*)/, 'g');
+        const titleMatched = text.match(titlePattern).join('');
+        if(titleMatched.length < title.length) throw new Error('Invalid characters...');
+
+        const authorPattern = new RegExp(/(([A-z|0-9]\s|\.|\-|\_)*)/, 'g');
+        const authorMatched = text.match(authorPattern).join('');
+        if(authorMatched.length < author.length) throw new Error('Invalid characters...');
+
+        const emailPattern = new RegExp(/(([A-z]|\.|[0-9])*)\@(([A-z]|\.|[0-9])*)(?<!@)$/, 'g');
+        const emailMatched = text.match(emailPattern).join('');
+        if(emailMatched.length < email.length) throw new Error('Invalid characters...');
+
+        if(fileExt === 'jpg' || fileExt === 'png' || fileExt === 'gif') {
+          const newPhoto = new Photo({ title, author, email, src: fileName, votes: 0 });
+          await newPhoto.save(); // ...save new photo in DB
+          res.json(newPhoto);
+        } else {
+          throw new Error('Wrong input!');
+        }
+      } else {
+        throw new Error('Wrong input!');
+      }
 
     } else {
       throw new Error('Wrong input!');
